@@ -1,5 +1,5 @@
 // =============================================================================
-// CashbackTitan - Core TypeScript Types & Enums
+// V Cashback - Core TypeScript Types & Enums
 // =============================================================================
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
@@ -7,7 +7,11 @@
 export enum UserRole {
   USER = "USER",
   ADMIN = "ADMIN",
-  SUPPORT = "SUPPORT",
+}
+
+export enum UserStatus {
+  ACTIVE = "ACTIVE",
+  BANNED = "BANNED",
 }
 
 export enum Platform {
@@ -30,6 +34,8 @@ export enum TransactionType {
   WITHDRAWAL_REQUEST = "WITHDRAWAL_REQUEST",
   WITHDRAWAL_PAID = "WITHDRAWAL_PAID",
   WITHDRAWAL_REJECTED = "WITHDRAWAL_REJECTED",
+  MANUAL_PAYOUT = "MANUAL_PAYOUT",
+  BONUS = "BONUS",
 }
 
 export enum WithdrawalStatus {
@@ -41,68 +47,91 @@ export enum WithdrawalStatus {
 
 // ─── Database Models ─────────────────────────────────────────────────────────
 
-export interface User {
+/**
+ * Profile — maps to `profiles` table.
+ * Balances are stored directly on the profile (no separate wallet).
+ */
+export interface Profile {
   id: string;
-  email: string;
+  phone: string; // 10 digits
   full_name: string;
-  avatar_url: string;
   role: UserRole;
-  tier_level: number;
-  referral_code: string;
-  referred_by: string | null;
-  metadata: Record<string, unknown>;
-  is_banned: boolean;
+  status: UserStatus;
+  balance_available: number; // VND
+  balance_pending: number; // VND
+  last_login: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface Wallet {
-  id: string;
+/**
+ * Auth credentials — maps to `auth_credentials` table.
+ */
+export interface AuthCredentials {
   user_id: string;
-  available_balance: number;
-  pending_balance: number;
-  locked_balance: number;
-  lifetime_earnings: number;
+  password_hash: string;
   updated_at: string;
 }
 
+/**
+ * Tracking link — for affiliate link conversion.
+ */
 export interface TrackingLink {
   id: string;
   user_id: string;
-  platform: Platform;
   original_url: string;
   affiliate_url: string;
   short_code: string;
+  platform: Platform;
   click_count: number;
   created_at: string;
 }
 
+/**
+ * Order — cashback tracking for e-commerce purchases.
+ */
 export interface Order {
   id: string;
-  external_order_id: string | null;
-  tracking_link_id: string | null;
   user_id: string;
+  link_id: string;
   platform: Platform;
-  gmv: number;
-  commission_amount: number;
-  user_commission: number;
-  system_fee: number;
-  tax: number;
+  external_order_id: string;
+  gmv: number; // Gross Merchandise Value
+  commission_rate: number;
+  total_commission: number;
+  platform_share: number;
+  user_commission: number; // What user gets
   status: OrderStatus;
-  estimated_payout_date: string | null;
   created_at: string;
   updated_at: string;
 }
 
+/**
+ * Transaction — ledger entry for payouts, bonuses.
+ */
 export interface Transaction {
   id: string;
   user_id: string;
-  amount: number;
   type: TransactionType;
+  amount: number;
+  balance_after: number;
+  description: string;
   reference_id: string | null;
-  description: string | null;
-  status: string;
   created_at: string;
+}
+
+/**
+ * Withdrawal request.
+ */
+export interface Withdrawal {
+  id: string;
+  user_id: string;
+  amount: number;
+  bank_info: BankInfo;
+  status: WithdrawalStatus;
+  admin_note: string | null;
+  created_at: string;
+  processed_at: string | null;
 }
 
 export interface BankInfo {
@@ -111,73 +140,36 @@ export interface BankInfo {
   account_holder: string;
 }
 
-export interface Withdrawal {
-  id: string;
-  user_id: string;
-  amount: number;
-  bank_info: BankInfo;
-  status: WithdrawalStatus;
-  admin_note: string | null;
-  processed_by: string | null;
-  processed_at: string | null;
-  created_at: string;
+// ─── Earnings Chart ──────────────────────────────────────────────────────────
+
+export interface EarningsDataPoint {
+  date: string;
+  earnings: number;
 }
 
-export interface AuditLog {
-  id: string;
-  admin_id: string;
-  action: string;
-  target_type: string;
-  target_id: string;
-  details: Record<string, unknown>;
-  ip_address: string | null;
-  created_at: string;
-}
+// ─── Action types ────────────────────────────────────────────────────────────
 
-// ─── API / Action Types ──────────────────────────────────────────────────────
-
-export interface GenerateLinkInput {
-  url: string;
-}
-
-export interface GenerateLinkResult {
+export interface AuthResult {
   success: boolean;
-  data?: {
-    platform: Platform;
-    original_url: string;
-    affiliate_url: string;
-    short_code: string;
-    short_url: string;
-    estimated_commission: string;
-  };
+  redirect?: string;
   error?: string;
+}
+
+export interface RegisterInput {
+  full_name: string;
+  phone: string;
+  password: string;
 }
 
 export interface WithdrawInput {
   amount: number;
-  bank_info: BankInfo;
+  bank_name: string;
+  account_number: string;
+  account_holder: string;
 }
 
 export interface WithdrawResult {
   success: boolean;
-  data?: {
-    withdrawal_id: string;
-    amount: number;
-    status: WithdrawalStatus;
-  };
+  data?: { withdrawal_id: string; locked_amount: number };
   error?: string;
-}
-
-// ─── Mock Data Types ─────────────────────────────────────────────────────────
-
-export interface MockAffiliateResponse {
-  affiliate_url: string;
-  commission_rate: number; // percentage, e.g., 3.5 means 3.5%
-  platform: Platform;
-  campaign_name: string;
-}
-
-export interface EarningsDataPoint {
-  date: string;
-  amount: number;
 }

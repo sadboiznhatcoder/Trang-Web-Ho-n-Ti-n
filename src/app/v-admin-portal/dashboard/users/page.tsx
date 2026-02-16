@@ -1,255 +1,172 @@
 "use client";
 
 // =============================================================================
-// Admin Users Page - Enhanced with balance column and detail modal
-// Route: /v-admin-portal/dashboard/users
+// Admin Users Page - Search, filter, data table with modal
 // =============================================================================
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-    Search,
-    Ban,
-    Eye,
-    MoreVertical,
-    Shield,
-    ShieldCheck,
-    UserX,
-    Wallet,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
+import { Search, Filter, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MOCK_ALL_USERS, MOCK_WALLET } from "@/lib/mock-data";
-import { UserRole, type User } from "@/types";
+import { MOCK_ALL_PROFILES } from "@/lib/mock-data";
+import { UserRole, UserStatus, type Profile } from "@/types";
 import { UserDetailModal } from "@/components/admin/user-detail-modal";
 
-const ROLE_COLORS: Record<UserRole, string> = {
-    [UserRole.USER]: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-    [UserRole.ADMIN]: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-    [UserRole.SUPPORT]: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-};
-
-function formatVND(amount: number): string {
-    return new Intl.NumberFormat("vi-VN").format(amount) + "đ";
-}
-
-// Mock wallet balances for different users
-const USER_BALANCES: Record<string, number> = {
-    "user-001": 1_250_000,
-    "user-002": 680_000,
-    "user-003": 0,
-    "user-004": 2_150_000,
-    "admin-001": 0,
-};
-
 export default function AdminUsersPage() {
-    const [search, setSearch] = useState("");
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | UserStatus>("ALL");
+  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
 
-    const filteredUsers = MOCK_ALL_USERS.filter(
-        (u) =>
-            u.full_name.toLowerCase().includes(search.toLowerCase()) ||
-            u.email.toLowerCase().includes(search.toLowerCase())
-    );
+  const usersOnly = MOCK_ALL_PROFILES.filter((p) => p.role === UserRole.USER);
 
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-white">
-                        Quản lý người dùng
-                    </h1>
-                    <p className="text-zinc-400 mt-1">
-                        {MOCK_ALL_USERS.length} người dùng
-                    </p>
-                </div>
-            </div>
+  const filtered = useMemo(() => {
+    let list = usersOnly;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (p) =>
+          p.full_name.toLowerCase().includes(q) ||
+          p.phone.includes(q)
+      );
+    }
+    if (statusFilter !== "ALL") {
+      list = list.filter((p) => p.status === statusFilter);
+    }
+    return list;
+  }, [search, statusFilter, usersOnly]);
 
-            {/* Search */}
-            <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                <Input
-                    placeholder="Tìm theo tên hoặc email..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="bg-zinc-900/80 border-white/10 text-white h-11 rounded-xl pl-10"
-                />
-            </div>
+  const formatVND = (n: number) => new Intl.NumberFormat("vi-VN").format(n) + "đ";
 
-            {/* Users table */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden"
-            >
-                {/* Desktop */}
-                <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="text-zinc-400 text-xs uppercase tracking-wider border-b border-white/5">
-                                <th className="text-left px-6 py-3 font-medium">Người dùng</th>
-                                <th className="text-left px-6 py-3 font-medium">Vai trò</th>
-                                <th className="text-center px-6 py-3 font-medium">Cấp</th>
-                                <th className="text-right px-6 py-3 font-medium">Số dư</th>
-                                <th className="text-left px-6 py-3 font-medium">Trạng thái</th>
-                                <th className="text-left px-6 py-3 font-medium">Ngày tham gia</th>
-                                <th className="text-right px-6 py-3 font-medium">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredUsers.map((user) => (
-                                <tr
-                                    key={user.id}
-                                    onClick={() => setSelectedUser(user)}
-                                    className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors cursor-pointer"
-                                >
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center text-white text-sm font-medium">
-                                                {user.full_name.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <p className="text-white text-sm font-medium">
-                                                    {user.full_name}
-                                                </p>
-                                                <p className="text-zinc-500 text-xs">{user.email}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <Badge variant="outline" className={ROLE_COLORS[user.role]}>
-                                            {user.role === UserRole.ADMIN && (
-                                                <ShieldCheck className="w-3 h-3 mr-1" />
-                                            )}
-                                            {user.role}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <span className="text-amber-400 font-medium">
-                                            ⭐ {user.tier_level}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <span className="text-emerald-400 font-medium text-sm">
-                                            {formatVND(USER_BALANCES[user.id] || 0)}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {user.is_banned ? (
-                                            <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20">
-                                                <UserX className="w-3 h-3 mr-1" />
-                                                Đã cấm
-                                            </Badge>
-                                        ) : (
-                                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                                                Hoạt động
-                                            </Badge>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 text-zinc-400 text-sm">
-                                        {new Date(user.created_at).toLocaleDateString("vi-VN")}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-zinc-400 hover:text-white"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    <MoreVertical className="w-4 h-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent
-                                                align="end"
-                                                className="bg-zinc-800 border-white/10"
-                                            >
-                                                <DropdownMenuItem
-                                                    className="text-zinc-300 hover:text-white"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setSelectedUser(user);
-                                                    }}
-                                                >
-                                                    <Eye className="w-4 h-4 mr-2" />
-                                                    Xem chi tiết
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem className="text-red-400 hover:text-red-300">
-                                                    <Ban className="w-4 h-4 mr-2" />
-                                                    {user.is_banned ? "Bỏ cấm" : "Cấm người dùng"}
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+  const formatDate = (iso: string | null) =>
+    iso
+      ? new Date(iso).toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "—";
 
-                {/* Mobile cards */}
-                <div className="md:hidden space-y-3 p-4">
-                    {filteredUsers.map((user) => (
-                        <div
-                            key={user.id}
-                            onClick={() => setSelectedUser(user)}
-                            className="bg-white/[0.02] rounded-xl p-4 space-y-3 cursor-pointer hover:bg-white/[0.04] transition-colors"
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center text-white text-sm font-medium">
-                                        {user.full_name.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <p className="text-white text-sm font-medium">
-                                            {user.full_name}
-                                        </p>
-                                        <p className="text-zinc-500 text-xs">{user.email}</p>
-                                    </div>
-                                </div>
-                                <Badge variant="outline" className={ROLE_COLORS[user.role]}>
-                                    {user.role}
-                                </Badge>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-zinc-500">Cấp {user.tier_level}</span>
-                                <span className="text-emerald-400 font-medium">
-                                    {formatVND(USER_BALANCES[user.id] || 0)}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                {user.is_banned ? (
-                                    <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20 text-xs">
-                                        Đã cấm
-                                    </Badge>
-                                ) : (
-                                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs">
-                                        Hoạt động
-                                    </Badge>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </motion.div>
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-white">Quản lý người dùng</h1>
+        <p className="text-zinc-400 text-sm mt-1">
+          {usersOnly.length} người dùng • {usersOnly.filter((u) => u.status === UserStatus.ACTIVE).length} đang hoạt động
+        </p>
+      </div>
 
-            {/* User Detail Modal */}
-            <AnimatePresence>
-                {selectedUser && (
-                    <UserDetailModal
-                        user={selectedUser}
-                        onClose={() => setSelectedUser(null)}
-                    />
-                )}
-            </AnimatePresence>
+      {/* Search & Filter Bar */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm theo tên hoặc số điện thoại..."
+            className="h-11 rounded-xl pl-10 bg-zinc-900 border-zinc-800 text-white placeholder-zinc-500 focus:border-emerald-500/50"
+          />
         </div>
-    );
+        <div className="flex gap-2">
+          {(["ALL", UserStatus.ACTIVE, UserStatus.BANNED] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                statusFilter === status
+                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                  : "bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-700"
+              }`}
+            >
+              {status === "ALL" ? "Tất cả" : status === UserStatus.ACTIVE ? "Hoạt động" : "Bị cấm"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Data Table */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+        {/* Header */}
+        <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-3 border-b border-zinc-800 text-xs font-medium text-zinc-500 uppercase tracking-wider">
+          <span>Người dùng</span>
+          <span>Số dư</span>
+          <span>Trạng thái</span>
+          <span>Lần đăng nhập cuối</span>
+          <span>Ngày tạo</span>
+        </div>
+
+        {/* Rows */}
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-zinc-500">
+            <Users className="w-10 h-10" />
+            <p className="text-sm">Không tìm thấy người dùng</p>
+          </div>
+        ) : (
+          filtered.map((user, i) => (
+            <motion.div
+              key={user.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.03 * i }}
+              onClick={() => setSelectedUser(user)}
+              className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-2 md:gap-4 px-6 py-4 border-b border-zinc-800/50 hover:bg-zinc-800/30 cursor-pointer transition-colors"
+            >
+              {/* User info */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center text-emerald-400 font-semibold text-sm shrink-0">
+                  {user.full_name.charAt(0)}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{user.full_name}</p>
+                  <p className="text-xs text-zinc-500 font-mono">{user.phone}</p>
+                </div>
+              </div>
+
+              {/* Balance */}
+              <div className="flex items-center md:block">
+                <span className="text-xs text-zinc-500 md:hidden mr-2">Số dư:</span>
+                <div>
+                  <p className="text-sm font-semibold text-emerald-400">{formatVND(user.balance_available)}</p>
+                  <p className="text-xs text-zinc-500">Chờ: {formatVND(user.balance_pending)}</p>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="flex items-center">
+                <Badge
+                  className={
+                    user.status === UserStatus.ACTIVE
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      : "bg-red-500/10 text-red-400 border-red-500/20"
+                  }
+                >
+                  {user.status === UserStatus.ACTIVE ? "Hoạt động" : "Bị cấm"}
+                </Badge>
+              </div>
+
+              {/* Last login */}
+              <div className="flex items-center">
+                <span className="text-xs text-zinc-400">{formatDate(user.last_login)}</span>
+              </div>
+
+              {/* Created */}
+              <div className="flex items-center">
+                <span className="text-xs text-zinc-400">{formatDate(user.created_at)}</span>
+              </div>
+            </motion.div>
+          ))
+        )}
+      </div>
+
+      {/* User Detail Modal */}
+      {selectedUser && (
+        <UserDetailModal
+          user={selectedUser}
+          onClose={() => setSelectedUser(null)}
+        />
+      )}
+    </div>
+  );
 }

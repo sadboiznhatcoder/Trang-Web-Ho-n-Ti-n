@@ -5,7 +5,21 @@
 // Detects platform via regex, calls mock affiliate service, generates short link.
 // =============================================================================
 
-import { type GenerateLinkResult, Platform } from "@/types";
+import { Platform } from "@/types";
+
+interface GenerateLinkResult {
+  success: boolean;
+  data?: {
+    platform: Platform;
+    original_url: string;
+    affiliate_url: string;
+    short_code: string;
+    short_url: string;
+    estimated_commission: string;
+  };
+  error?: string;
+}
+
 import {
     generateAffiliateLink,
     generateShortCode,

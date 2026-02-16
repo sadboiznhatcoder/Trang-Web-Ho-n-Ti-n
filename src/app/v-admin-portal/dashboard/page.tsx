@@ -1,158 +1,114 @@
 "use client";
 
 // =============================================================================
-// Admin Overview - KPI cards and quick stats
-// Route: /v-admin-portal/dashboard
+// Admin Dashboard Overview - KPI cards
 // =============================================================================
 
 import { motion } from "framer-motion";
-import {
-    DollarSign,
-    Users,
-    ShoppingBag,
-    ArrowDownToLine,
-    TrendingUp,
-    BarChart3,
-} from "lucide-react";
+import { Users, DollarSign, TrendingUp, Clock, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { MOCK_ADMIN_KPIS } from "@/lib/mock-data";
 
-function formatVND(amount: number): string {
-    if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(1)}B đ`;
-    if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M đ`;
-    return new Intl.NumberFormat("vi-VN").format(amount) + "đ";
-}
+const formatVND = (n: number) => {
+  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + " tỷ";
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+  return new Intl.NumberFormat("vi-VN").format(n);
+};
 
-const kpiCards = [
-    {
-        label: "Tổng GMV",
-        value: formatVND(MOCK_ADMIN_KPIS.totalGMV),
-        icon: DollarSign,
-        color: "text-emerald-400",
-        bg: "bg-emerald-500/10",
-        gradient: "from-emerald-500/20 to-teal-500/20",
-        change: "+12.5%",
-    },
-    {
-        label: "Tổng chi trả",
-        value: formatVND(MOCK_ADMIN_KPIS.totalPayouts),
-        icon: ArrowDownToLine,
-        color: "text-cyan-400",
-        bg: "bg-cyan-500/10",
-        gradient: "from-cyan-500/20 to-blue-500/20",
-        change: "+8.3%",
-    },
-    {
-        label: "Người dùng hoạt động",
-        value: MOCK_ADMIN_KPIS.activeUsers.toLocaleString(),
-        icon: Users,
-        color: "text-purple-400",
-        bg: "bg-purple-500/10",
-        gradient: "from-purple-500/20 to-pink-500/20",
-        change: "+5.2%",
-    },
-    {
-        label: "Tổng đơn hàng",
-        value: MOCK_ADMIN_KPIS.totalOrders.toLocaleString(),
-        icon: ShoppingBag,
-        color: "text-amber-400",
-        bg: "bg-amber-500/10",
-        gradient: "from-amber-500/20 to-orange-500/20",
-        change: "+15.1%",
-    },
-    {
-        label: "Tỷ lệ chuyển đổi",
-        value: `${MOCK_ADMIN_KPIS.conversionRate}%`,
-        icon: TrendingUp,
-        color: "text-rose-400",
-        bg: "bg-rose-500/10",
-        gradient: "from-rose-500/20 to-red-500/20",
-        change: "+0.3%",
-    },
-    {
-        label: "Rút tiền chờ duyệt",
-        value: MOCK_ADMIN_KPIS.pendingWithdrawals.toString(),
-        icon: BarChart3,
-        color: "text-blue-400",
-        bg: "bg-blue-500/10",
-        gradient: "from-blue-500/20 to-indigo-500/20",
-        change: "",
-    },
-];
+export default function AdminOverview() {
+  const kpi = MOCK_ADMIN_KPIS;
 
-export default function AdminPage() {
-    return (
-        <div className="space-y-8">
+  const cards = [
+    {
+      label: "Tổng người dùng",
+      value: kpi.totalUsers.toString(),
+      sub: `${kpi.activeUsers} đang hoạt động`,
+      icon: Users,
+      color: "text-blue-400",
+      bg: "bg-blue-500/10",
+    },
+    {
+      label: "Tổng GMV",
+      value: formatVND(kpi.totalGMV) + "đ",
+      sub: "Tổng giá trị giao dịch",
+      icon: TrendingUp,
+      color: "text-emerald-400",
+      bg: "bg-emerald-500/10",
+    },
+    {
+      label: "Đã thanh toán",
+      value: formatVND(kpi.totalPayouts) + "đ",
+      sub: "Tổng tiền đã rút",
+      icon: DollarSign,
+      color: "text-cyan-400",
+      bg: "bg-cyan-500/10",
+    },
+    {
+      label: "Chờ xử lý",
+      value: kpi.pendingWithdrawals.toString(),
+      sub: "Yêu cầu rút tiền",
+      icon: Clock,
+      color: "text-amber-400",
+      bg: "bg-amber-500/10",
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-white">Tổng quan</h1>
+        <p className="text-zinc-400 text-sm mt-1">Bảng điều khiển quản trị</p>
+      </div>
+
+      {/* KPI Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {cards.map((card, i) => (
+          <motion.div
+            key={card.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 * i }}
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5"
+          >
+            <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center mb-3`}>
+              <card.icon className={`w-5 h-5 ${card.color}`} />
+            </div>
+            <p className="text-2xl font-bold text-white">{card.value}</p>
+            <p className="text-sm text-zinc-400 mt-0.5">{card.label}</p>
+            <p className="text-xs text-zinc-500 mt-1">{card.sub}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Quick Links */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <Link
+          href="/v-admin-portal/dashboard/users"
+          className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-2xl p-5 hover:border-emerald-500/30 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <Users className="w-5 h-5 text-emerald-400" />
             <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white">
-                    Bảng điều khiển quản trị
-                </h1>
-                <p className="text-zinc-400 mt-1">
-                    Tổng quan nền tảng và các chỉ số hiệu suất chính.
-                </p>
+              <p className="text-sm font-medium text-white">Quản lý người dùng</p>
+              <p className="text-xs text-zinc-500">Xem, cấm, sửa thông tin</p>
             </div>
-
-            {/* KPI Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {kpiCards.map((kpi, index) => (
-                    <motion.div
-                        key={kpi.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: index * 0.08 }}
-                        className="group relative bg-zinc-900/80 backdrop-blur-xl border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-all overflow-hidden"
-                    >
-                        {/* Hover glow */}
-                        <div
-                            className={`absolute inset-0 bg-gradient-to-br ${kpi.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
-                        />
-
-                        <div className="relative z-10">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className={`w-10 h-10 rounded-xl ${kpi.bg} flex items-center justify-center`}>
-                                    <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
-                                </div>
-                                {kpi.change && (
-                                    <span className="text-emerald-400 text-xs font-medium bg-emerald-500/10 px-2 py-1 rounded-full">
-                                        {kpi.change}
-                                    </span>
-                                )}
-                            </div>
-                            <p className="text-3xl font-bold text-white mb-1">{kpi.value}</p>
-                            <p className="text-zinc-400 text-sm">{kpi.label}</p>
-                        </div>
-                    </motion.div>
-                ))}
+          </div>
+          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
+        </Link>
+        <Link
+          href="/v-admin-portal/dashboard/withdrawals"
+          className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-2xl p-5 hover:border-emerald-500/30 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <DollarSign className="w-5 h-5 text-cyan-400" />
+            <div>
+              <p className="text-sm font-medium text-white">Quản lý rút tiền</p>
+              <p className="text-xs text-zinc-500">Duyệt, từ chối yêu cầu</p>
             </div>
-
-            {/* Quick links */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <motion.a
-                    href="/v-admin-portal/dashboard/users"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 hover:border-purple-500/20 hover:bg-purple-500/5 transition-all group"
-                >
-                    <Users className="w-8 h-8 text-purple-400 mb-3" />
-                    <h3 className="text-white font-semibold text-lg">Quản lý người dùng</h3>
-                    <p className="text-zinc-400 text-sm mt-1">
-                        Xem, quản lý và kiểm duyệt tài khoản người dùng.
-                    </p>
-                </motion.a>
-                <motion.a
-                    href="/v-admin-portal/dashboard/withdrawals"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 hover:border-cyan-500/20 hover:bg-cyan-500/5 transition-all group"
-                >
-                    <ArrowDownToLine className="w-8 h-8 text-cyan-400 mb-3" />
-                    <h3 className="text-white font-semibold text-lg">Quản lý rút tiền</h3>
-                    <p className="text-zinc-400 text-sm mt-1">
-                        Duyệt hoặc từ chối yêu cầu rút tiền đang chờ.
-                    </p>
-                </motion.a>
-            </div>
-        </div>
-    );
+          </div>
+          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
+        </Link>
+      </div>
+    </div>
+  );
 }

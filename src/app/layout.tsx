@@ -3,17 +3,17 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
-  variable: "--font-inter",
   subsets: ["latin", "vietnamese"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
-  title: "V Cashback | Hoàn Tiền Mỗi Lần Mua Sắm",
+  title: "V Cashback | Mua Sắm Hoàn Tiền Lên Đến 50%",
   description:
-    "Chuyển đổi bất kỳ liên kết Shopee, Lazada, TikTok Shop hoặc Tiki thành liên kết hoàn tiền. Mua sắm như thường và nhận hoàn tiền lên đến 12%.",
+    "Nền tảng hoàn tiền hàng đầu Việt Nam. Dán link Shopee, Lazada, TikTok Shop hoặc Tiki và nhận hoàn tiền lên đến 50% mỗi đơn hàng.",
   keywords: [
     "hoàn tiền",
-    "tiếp thị liên kết",
+    "cashback",
     "shopee",
     "lazada",
     "tiktok shop",
@@ -24,14 +24,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="vi" className="dark">
-      <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
-      </body>
+    <html lang="vi" className={inter.variable}>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

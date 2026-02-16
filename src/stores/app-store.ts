@@ -4,44 +4,44 @@
 // =============================================================================
 
 import { create } from "zustand";
-import { type User } from "@/types";
-import { MOCK_USER } from "@/lib/mock-data";
+import { type Profile } from "@/types";
+import { MOCK_CURRENT_USER } from "@/lib/mock-data";
 
 interface AppState {
-    // Sidebar
-    sidebarOpen: boolean;
-    toggleSidebar: () => void;
-    setSidebarOpen: (open: boolean) => void;
+  // Sidebar
+  sidebarOpen: boolean;
+  toggleSidebar: () => void;
+  setSidebarOpen: (open: boolean) => void;
 
-    // Balance visibility (eye icon toggle)
-    balanceVisible: boolean;
-    toggleBalanceVisibility: () => void;
+  // Balance visibility (eye icon toggle)
+  balanceVisible: boolean;
+  toggleBalanceVisibility: () => void;
 
-    // User session (client-side mirror)
-    user: User | null;
-    setUser: (user: User | null) => void;
+  // User session (client-side mirror)
+  user: Profile | null;
+  setUser: (user: Profile | null) => void;
 
-    // Theme
-    isDarkMode: boolean;
-    toggleDarkMode: () => void;
+  // Theme
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
-    // Sidebar
-    sidebarOpen: true,
-    toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
-    setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  // Sidebar
+  sidebarOpen: true,
+  toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
 
-    // Balance visibility
-    balanceVisible: true,
-    toggleBalanceVisibility: () =>
-        set((s) => ({ balanceVisible: !s.balanceVisible })),
+  // Balance visibility
+  balanceVisible: true,
+  toggleBalanceVisibility: () =>
+    set((s) => ({ balanceVisible: !s.balanceVisible })),
 
-    // User session
-    user: MOCK_USER,
-    setUser: (user) => set({ user }),
+  // User session
+  user: MOCK_CURRENT_USER,
+  setUser: (user) => set({ user }),
 
-    // Theme - defaults to dark for "Glassmorphism Fintech" vibe
-    isDarkMode: true,
-    toggleDarkMode: () => set((s) => ({ isDarkMode: !s.isDarkMode })),
+  // Theme — default light mode
+  isDarkMode: false,
+  toggleDarkMode: () => set((s) => ({ isDarkMode: !s.isDarkMode })),
 }));

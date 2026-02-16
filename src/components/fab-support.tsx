@@ -1,112 +1,61 @@
 "use client";
 
 // =============================================================================
-// FABSupport - Floating Action Button with speed-dial support options
+// FAB Support - Light mode floating action button
 // =============================================================================
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Phone, X, HelpCircle } from "lucide-react";
+import { MessageCircle, X, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const SUPPORT_OPTIONS = [
-    {
-        id: "messenger",
-        label: "Messenger",
-        icon: MessageCircle,
-        color: "from-blue-500 to-blue-600",
-        href: "https://m.me/cashbacktitan",
-    },
-    {
-        id: "zalo",
-        label: "Zalo",
-        icon: MessageCircle,
-        color: "from-blue-400 to-blue-500",
-        href: "https://zalo.me/cashbacktitan",
-    },
-    {
-        id: "phone",
-        label: "Hotline",
-        icon: Phone,
-        color: "from-emerald-500 to-emerald-600",
-        href: "tel:+84123456789",
-    },
-];
+export function FabSupport() {
+  const [open, setOpen] = useState(false);
 
-export function FABSupport() {
-    const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="fixed bottom-6 right-6 z-50 lg:bottom-8 lg:right-8">
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="absolute bottom-16 right-0 w-80 bg-card border border-border rounded-2xl shadow-xl overflow-hidden"
+          >
+            <div className="bg-emerald-600 text-white px-5 py-4">
+              <h3 className="font-semibold text-sm">Hỗ trợ khách hàng</h3>
+              <p className="text-emerald-100 text-xs mt-0.5">
+                Phản hồi trong vòng 5 phút
+              </p>
+            </div>
+            <div className="p-4">
+              <div className="bg-muted rounded-xl p-3 mb-3">
+                <p className="text-sm text-foreground">
+                  Xin chào! Tôi có thể giúp gì cho bạn?
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-1">CSKH • Vừa xong</p>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Nhập tin nhắn..."
+                  className="flex-1 h-10 px-3 rounded-xl border border-border bg-background text-sm text-foreground outline-none focus:border-emerald-400"
+                />
+                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-10 w-10 p-0">
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-    return (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col-reverse items-end gap-3">
-            {/* Main FAB button */}
-            <motion.button
-                onClick={() => setIsOpen(!isOpen)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/30 flex items-center justify-center transition-all"
-            >
-                <AnimatePresence mode="wait">
-                    {isOpen ? (
-                        <motion.div
-                            key="close"
-                            initial={{ rotate: -90, opacity: 0 }}
-                            animate={{ rotate: 0, opacity: 1 }}
-                            exit={{ rotate: 90, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <X className="w-6 h-6" />
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="help"
-                            initial={{ rotate: 90, opacity: 0 }}
-                            animate={{ rotate: 0, opacity: 1 }}
-                            exit={{ rotate: -90, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <HelpCircle className="w-6 h-6" />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </motion.button>
-
-            {/* Speed dial options */}
-            <AnimatePresence>
-                {isOpen && (
-                    <div className="flex flex-col items-end gap-2">
-                        {SUPPORT_OPTIONS.map((option, index) => (
-                            <motion.a
-                                key={option.id}
-                                href={option.href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                                animate={{
-                                    opacity: 1,
-                                    y: 0,
-                                    scale: 1,
-                                    transition: { delay: index * 0.08 },
-                                }}
-                                exit={{
-                                    opacity: 0,
-                                    y: 20,
-                                    scale: 0.8,
-                                    transition: { delay: (SUPPORT_OPTIONS.length - index) * 0.05 },
-                                }}
-                                className="flex items-center gap-3 group"
-                            >
-                                <span className="bg-zinc-800/90 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                    {option.label}
-                                </span>
-                                <div
-                                    className={`w-12 h-12 rounded-full bg-gradient-to-r ${option.color} text-white shadow-lg flex items-center justify-center hover:scale-110 transition-transform`}
-                                >
-                                    <option.icon className="w-5 h-5" />
-                                </div>
-                            </motion.a>
-                        ))}
-                    </div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30 transition-all"
+      >
+        {open ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+      </button>
+    </div>
+  );
 }

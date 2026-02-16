@@ -1,74 +1,125 @@
 "use client";
 
 // =============================================================================
-// RecentActivity - Latest transactions list
+// Recent Activity - Light mode transaction list
 // =============================================================================
 
 import { motion } from "framer-motion";
-import { ArrowUpRight, ArrowDownRight, Clock } from "lucide-react";
-import { MOCK_TRANSACTIONS } from "@/lib/mock-data";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Gift,
+} from "lucide-react";
+import type { Transaction } from "@/types";
 import { TransactionType } from "@/types";
 
-function formatVND(amount: number): string {
-    return new Intl.NumberFormat("vi-VN").format(Math.abs(amount)) + "đ";
+const TYPE_CONFIG: Record<
+  TransactionType,
+  { label: string; icon: React.ElementType; color: string; bgColor: string }
+> = {
+  [TransactionType.CASHBACK_APPROVED]: {
+    label: "Hoàn tiền",
+    icon: ArrowDownLeft,
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-50",
+  },
+  [TransactionType.CASHBACK_PENDING]: {
+    label: "Chờ duyệt",
+    icon: Clock,
+    color: "text-amber-600",
+    bgColor: "bg-amber-50",
+  },
+  [TransactionType.WITHDRAWAL_REQUEST]: {
+    label: "Yêu cầu rút",
+    icon: ArrowUpRight,
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
+  },
+  [TransactionType.WITHDRAWAL_PAID]: {
+    label: "Đã rút",
+    icon: CheckCircle2,
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-50",
+  },
+  [TransactionType.WITHDRAWAL_REJECTED]: {
+    label: "Từ chối rút",
+    icon: XCircle,
+    color: "text-red-600",
+    bgColor: "bg-red-50",
+  },
+  [TransactionType.MANUAL_PAYOUT]: {
+    label: "Thanh toán",
+    icon: Gift,
+    color: "text-purple-600",
+    bgColor: "bg-purple-50",
+  },
+  [TransactionType.BONUS]: {
+    label: "Thưởng",
+    icon: Gift,
+    color: "text-pink-600",
+    bgColor: "bg-pink-50",
+  },
+};
+
+interface RecentActivityProps {
+  transactions: Transaction[];
 }
 
-function getTransactionMeta(type: TransactionType) {
-    switch (type) {
-        case TransactionType.CASHBACK_APPROVED:
-            return { label: "Hoàn tiền đã duyệt", color: "text-emerald-400", icon: ArrowUpRight, bg: "bg-emerald-500/10" };
-        case TransactionType.CASHBACK_PENDING:
-            return { label: "Hoàn tiền đang chờ", color: "text-amber-400", icon: Clock, bg: "bg-amber-500/10" };
-        case TransactionType.WITHDRAWAL_PAID:
-            return { label: "Rút tiền", color: "text-red-400", icon: ArrowDownRight, bg: "bg-red-500/10" };
-        case TransactionType.WITHDRAWAL_REQUEST:
-            return { label: "Yêu cầu rút tiền", color: "text-orange-400", icon: ArrowDownRight, bg: "bg-orange-500/10" };
-        default:
-            return { label: type, color: "text-zinc-400", icon: Clock, bg: "bg-zinc-500/10" };
-    }
-}
+export function RecentActivity({ transactions }: RecentActivityProps) {
+  const formatVND = (n: number) =>
+    (n >= 0 ? "+" : "") + new Intl.NumberFormat("vi-VN").format(n) + "đ";
 
-export function RecentActivity() {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6"
-        >
-            <h3 className="text-white font-semibold text-lg mb-4">Hoạt động gần đây</h3>
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-            <div className="space-y-3">
-                {MOCK_TRANSACTIONS.map((txn) => {
-                    const meta = getTransactionMeta(txn.type);
-                    const isPositive = txn.amount > 0;
-
-                    return (
-                        <div
-                            key={txn.id}
-                            className="flex items-center gap-4 bg-white/[0.02] rounded-xl px-4 py-3 hover:bg-white/[0.05] transition-colors"
-                        >
-                            <div className={`w-10 h-10 rounded-xl ${meta.bg} flex items-center justify-center shrink-0`}>
-                                <meta.icon className={`w-5 h-5 ${meta.color}`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-white text-sm font-medium">{meta.label}</p>
-                                <p className="text-zinc-500 text-xs truncate">
-                                    {txn.description}
-                                </p>
-                            </div>
-                            <div className="text-right shrink-0">
-                                <p className={`font-semibold ${isPositive ? "text-emerald-400" : "text-red-400"}`}>
-                                    {isPositive ? "+" : "-"}{formatVND(txn.amount)}
-                                </p>
-                                <p className="text-zinc-500 text-xs">
-                                    {new Date(txn.created_at).toLocaleDateString("vi-VN")}
-                                </p>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </motion.div>
-    );
+  return (
+    <div className="bg-card border border-border rounded-2xl p-5">
+      <h3 className="text-base font-semibold text-foreground mb-4">
+        Hoạt động gần đây
+      </h3>
+      <div className="space-y-3">
+        {transactions.map((txn, i) => {
+          const config = TYPE_CONFIG[txn.type];
+          return (
+            <motion.div
+              key={txn.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.05 * i }}
+              className="flex items-center gap-3 py-2"
+            >
+              <div
+                className={`w-9 h-9 rounded-xl ${config.bgColor} flex items-center justify-center shrink-0`}
+              >
+                <config.icon className={`w-4 h-4 ${config.color}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {txn.description}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(txn.created_at)}
+                </p>
+              </div>
+              <span
+                className={`text-sm font-semibold ${
+                  txn.amount >= 0 ? "text-emerald-600" : "text-red-500"
+                }`}
+              >
+                {formatVND(txn.amount)}
+              </span>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }

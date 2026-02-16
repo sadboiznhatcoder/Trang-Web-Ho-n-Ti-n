@@ -4,7 +4,14 @@
 // In production, replace this with real API calls.
 // =============================================================================
 
-import { type MockAffiliateResponse, Platform } from "@/types";
+import { Platform } from "@/types";
+
+interface MockAffiliateResponse {
+  affiliate_url: string;
+  commission_rate: number;
+  platform: Platform;
+  campaign_name: string;
+}
 
 /** Commission rates by platform (percentage of GMV) */
 const COMMISSION_RATES: Record<Platform, { min: number; max: number }> = {
